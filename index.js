@@ -99,15 +99,18 @@ async function execute(message, serverQueue) {
   }
   
 
-function skip(message, serverQueue) {
-  if (!message.member.voice.channel) {
-    return message.channel.send('You have to be in a voice channel to skip the music!');
+  function skip(message, serverQueue) {
+    if (!message.member.voice.channel)
+      return message.channel.send(
+        "You have to be in a voice channel to skip the music!"
+      );
+    if (!serverQueue)
+      return message.channel.send("There is no song that I could skip!");
+    if (serverQueue.connection && serverQueue.connection.dispatcher) {
+      serverQueue.connection.dispatcher.end();
+    }
   }
-  if (!serverQueue) {
-    return message.channel.send('There is no song to skip!');
-  }
-  serverQueue.connection.dispatcher.end();
-}
+  
 
 function stop(message, serverQueue) {
     if (!message.member.voice.channel)
