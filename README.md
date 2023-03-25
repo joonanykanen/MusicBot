@@ -31,7 +31,7 @@ A Discord music bot that plays music from YouTube and SoundCloud. It features ba
 
 Replace `!` with your desired command prefix on `index.js`.
 
-- `!play [YouTube or SoundCloud URL]` - Play a song or add it to the queue
+- `!play [YouTube or SoundCloud URL / Search Song]` - Play a song or add it to the queue
 - `!stop` - Stop music playback and clear the queue
 - `!skip` - Skip the currently playing song
 
