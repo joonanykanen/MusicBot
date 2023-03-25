@@ -37,4 +37,4 @@ Replace `!` with your desired command prefix on `index.js`.
 
 ## License
 
-[MIT License](./LICENSE)
+[MIT License](LICENSE.md)
