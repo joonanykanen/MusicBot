@@ -112,22 +112,30 @@ async function execute(message, serverQueue) {
   }
   
 
-  function stop(message, serverQueue) {
-    if (!message.member.voice.channel)
-      return message.channel.send(
-        "You have to be in a voice channel to stop the music!"
-      );
-    if (!serverQueue)
-      return message.channel.send("There is no song that I could stop!");
-    if (serverQueue.connection && serverQueue.connection.dispatcher) {
-      serverQueue.songs = [];
-      serverQueue.connection.dispatcher.destroy(); // Use destroy() instead of end()
-      serverQueue.voiceChannel.leave(); // Make the bot leave the voice channel
+  async function stop(message, serverQueue) {
+    if (!message.member.voice.channel) {
+      return message.channel.send("You have to be in a voice channel to stop the music!");
     }
+  
+    if (!serverQueue) {
+      return message.channel.send("There is no song that I could stop!");
+    }
+  
+    serverQueue.songs = [];
+  
+    if (serverQueue.connection && serverQueue.connection.dispatcher) {
+      serverQueue.connection.dispatcher.end();
+    }
+  
+    if (serverQueue.connection && serverQueue.connection.destroy) {
+      serverQueue.connection.destroy();
+    }
+  
+    queue.delete(message.guild.id);
   }
   
   
-
+  
 function play(guild, song) {
     const serverQueue = queue.get(guild.id);
     if (!song) {
