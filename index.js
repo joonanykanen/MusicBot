@@ -4,6 +4,7 @@ require('dotenv').config();
 const { Client, Intents } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
+const ytsr = require('ytsr');
 const scdl = require('soundcloud-downloader').default;
 const client = new Client({
     intents: [
@@ -58,10 +59,33 @@ async function execute(message, serverQueue) {
       );
     }
   
-    const songInfo = await ytdl.getInfo(args[1]);
+    let songInfo, songUrl;
+    if (ytdl.validateURL(args[1])) {
+      songInfo = await ytdl.getInfo(args[1]);
+      songUrl = songInfo.videoDetails.video_url;
+    } else {
+      // Search for the song on YouTube
+      const ytTracks = await ytsr(args.slice(1).join(" "), { limit: 1 });
+      if (!ytTracks.items || ytTracks.items.length === 0) {
+        // If no results are found on YouTube, search on SoundCloud
+        const scTracks = await scdl.search({
+          query: args.slice(1).join(" "),
+          resourceType: "tracks"
+        });
+        if (!scTracks || scTracks.length === 0) {
+          return message.channel.send("No results found for that song name!");
+        }
+        songUrl = scTracks[0].permalink_url;
+        songInfo = await ytdl.getInfo(songUrl);
+      } else {
+        songUrl = ytTracks.items[0].url;
+        songInfo = await ytdl.getInfo(songUrl);
+      }
+    }
+  
     const song = {
       title: songInfo.videoDetails.title,
-      url: songInfo.videoDetails.video_url,
+      url: songUrl,
     };
   
     if (!serverQueue) {
@@ -97,7 +121,7 @@ async function execute(message, serverQueue) {
       return message.channel.send(`${song.title} has been added to the queue!`);
     }
   }
-  
+
 
   function skip(message, serverQueue) {
     if (!message.member.voice.channel) {
