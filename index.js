@@ -112,7 +112,7 @@ async function execute(message, serverQueue) {
   }
   
 
-function stop(message, serverQueue) {
+  function stop(message, serverQueue) {
     if (!message.member.voice.channel)
       return message.channel.send(
         "You have to be in a voice channel to stop the music!"
@@ -122,6 +122,7 @@ function stop(message, serverQueue) {
     if (serverQueue.connection && serverQueue.connection.dispatcher) {
       serverQueue.songs = [];
       serverQueue.connection.dispatcher.destroy(); // Use destroy() instead of end()
+      serverQueue.voiceChannel.leave(); // Make the bot leave the voice channel
     }
   }
   
