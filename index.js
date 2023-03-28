@@ -60,18 +60,17 @@ async function execute(message, serverQueue) {
     );
   }
 
-  const youtubeUrlRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?([a-zA-Z0-9-_]{11})$/;
-  if (!args[1].match(youtubeUrlRegex)) {
-    return message.channel.send("Please provide a valid YouTube video link!");
-  }
-
   let songInfo, songUrl;
   try {
-    songInfo = await ytdl.getInfo(args[1]);
-    songUrl = songInfo.videoDetails.video_url;
+    if (ytdl.validateURL(args[1])) {
+      songInfo = await ytdl.getInfo(args[1]);
+      songUrl = songInfo.videoDetails.video_url;
+    } else {
+      throw new Error("Invalid YouTube video link!");
+    }
   } catch (error) {
     console.error(error);
-    return message.channel.send("An error occurred while trying to fetch the video information.");
+    return message.channel.send(error.message);
   }
 
   const song = {
