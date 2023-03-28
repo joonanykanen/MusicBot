@@ -65,7 +65,7 @@ async function execute(message, serverQueue) {
       songUrl = songInfo.videoDetails.video_url;
     } else {
       // Search for the song on YouTube
-      const ytTracks = await ytsr(args.slice(1).join(" "), { limit: 1 });
+      const ytTracks = await ytsr(args.slice(1).join(" "), { limit: 1, type: 'video' });
       if (!ytTracks.items || ytTracks.items.length === 0) {
         // If no results are found on YouTube, search on SoundCloud
         const scTracks = await scdl.search({
