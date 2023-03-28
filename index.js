@@ -49,78 +49,70 @@ client.on('messageCreate', async message => {
   }
 });
 
+
 async function execute(message, serverQueue) {
-    const args = message.content.split(" ");
-  
-    const voiceChannelId = message.member.voice.channelId;
-    if (!voiceChannelId) {
-      return message.channel.send(
-        "You need to be in a voice channel to play music!"
-      );
-    }
-  
-    let songInfo, songUrl;
-    if (ytdl.validateURL(args[1]) && ytdl.getURLVideoID(args[1]) != null && !args[1].includes('list=')) {
-      songInfo = await ytdl.getInfo(args[1]);
-      songUrl = songInfo.videoDetails.video_url;
-    } else {
-      // Search for the song on YouTube
-      const ytTracks = await ytsr(args.slice(1).join(" "), { limit: 1, type: 'video' });
-      if (!ytTracks.items || ytTracks.items.length === 0) {
-        // If no results are found on YouTube, search on SoundCloud
-        const scTracks = await scdl.search({
-          query: args.slice(1).join(" "),
-          resourceType: "tracks"
-        });
-        if (!scTracks || scTracks.length === 0) {
-          return message.channel.send("No results found for that song name!");
-        }
-        songUrl = scTracks[0].permalink_url;
-        songInfo = await ytdl.getInfo(songUrl);
-      } else {
-        songUrl = ytTracks.items[0].url;
-        songInfo = await ytdl.getInfo(songUrl);
-      }
-    }
-  
-    const song = {
-      title: songInfo.videoDetails.title,
-      url: songUrl,
-    };
-  
-    if (!serverQueue) {
-      const queueContruct = {
-        textChannel: message.channel,
-        voiceChannelId: voiceChannelId,
-        connection: null,
-        songs: [],
-        volume: 5,
-        playing: true,
-      };
-  
-      queue.set(message.guild.id, queueContruct);
-  
-      queueContruct.songs.push(song);
-  
-      try {
-        const connection = joinVoiceChannel({
-          channelId: voiceChannelId,
-          guildId: message.guild.id,
-          adapterCreator: message.guild.voiceAdapterCreator,
-        });
-  
-        queueContruct.connection = connection;
-        play(message.guild, queueContruct.songs[0]);
-      } catch (err) {
-        console.log(err);
-        queue.delete(message.guild.id);
-        return message.channel.send(err);
-      }
-    } else {
-      serverQueue.songs.push(song);
-      return message.channel.send(`${song.title} has been added to the queue!`);
-    }
+  const args = message.content.split(" ");
+
+  const voiceChannelId = message.member.voice.channelId;
+  if (!voiceChannelId) {
+    return message.channel.send(
+      "You need to be in a voice channel to play music!"
+    );
   }
+
+  const youtubeUrlRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?([a-zA-Z0-9-_]{11})$/;
+  if (!args[1].match(youtubeUrlRegex)) {
+    return message.channel.send("Please provide a valid YouTube video link!");
+  }
+
+  let songInfo, songUrl;
+  try {
+    songInfo = await ytdl.getInfo(args[1]);
+    songUrl = songInfo.videoDetails.video_url;
+  } catch (error) {
+    console.error(error);
+    return message.channel.send("An error occurred while trying to fetch the video information.");
+  }
+
+  const song = {
+    title: songInfo.videoDetails.title,
+    url: songUrl,
+  };
+
+  if (!serverQueue) {
+    const queueContruct = {
+      textChannel: message.channel,
+      voiceChannelId: voiceChannelId,
+      connection: null,
+      songs: [],
+      volume: 5,
+      playing: true,
+    };
+
+    queue.set(message.guild.id, queueContruct);
+
+    queueContruct.songs.push(song);
+
+    try {
+      const connection = joinVoiceChannel({
+        channelId: voiceChannelId,
+        guildId: message.guild.id,
+        adapterCreator: message.guild.voiceAdapterCreator,
+      });
+
+      queueContruct.connection = connection;
+      play(message.guild, queueContruct.songs[0]);
+    } catch (err) {
+      console.log(err);
+      queue.delete(message.guild.id);
+      return message.channel.send(err);
+    }
+  } else {
+    serverQueue.songs.push(song);
+    return message.channel.send(`${song.title} has been added to the queue!`);
+  }
+}
+
 
 
   function skip(message, serverQueue) {
