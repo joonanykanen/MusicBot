@@ -60,7 +60,7 @@ async function execute(message, serverQueue) {
     }
   
     let songInfo, songUrl;
-    if (ytdl.validateURL(args[1])) {
+    if (ytdl.validateURL(args[1]) && ytdl.getURLVideoID(args[1]) != null && !args[1].includes('list=')) {
       songInfo = await ytdl.getInfo(args[1]);
       songUrl = songInfo.videoDetails.video_url;
     } else {
